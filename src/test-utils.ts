@@ -1,4 +1,3 @@
-import { ProxyAgent,setGlobalDispatcher } from 'undici';
 import { Scraper } from './scraper';
 import fs from 'fs';
 
@@ -52,7 +51,6 @@ export async function getScraper(
       }; SameSite=${cookie.sameSite || 'Lax'}`,
   );
 
-  const proxyUrl = process.env['PROXY_URL'];
   let agent: any;
 
   if (
@@ -69,35 +67,6 @@ export async function getScraper(
     throw new Error(
       'TWITTER_USERNAME and TWITTER_PASSWORD variables must be defined.',
     );
-  }
-
-  if (proxyUrl) {
-    // Parse the proxy URL
-    const url = new URL(proxyUrl);
-    const username = url.username;
-    const password = url.password;
-
-    // Strip auth from URL if present
-    url.username = '';
-    url.password = '';
-
-    const agentOptions: any = {
-      uri: url.toString(),
-      requestTls: {
-        rejectUnauthorized: false,
-      },
-    };
-
-    // Add Basic auth if credentials exist
-    if (username && password) {
-      agentOptions.token = `Basic ${Buffer.from(
-        `${username}:${password}`,
-      ).toString('base64')}`;
-    }
-
-    agent = new ProxyAgent(agentOptions);
-
-    setGlobalDispatcher(agent)
   }
 
   const scraper = new Scraper({

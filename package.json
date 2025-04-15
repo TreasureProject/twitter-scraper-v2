@@ -1,8 +1,8 @@
 {
-  "name": "agent-twitter-client",
+  "name": "@treasure-dev/twitter-scraper",
   "description": "A twitter client for agents",
   "keywords": [],
-  "version": "0.0.18",
+  "version": "0.0.19",
   "main": "dist/default/cjs/index.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
@@ -27,17 +27,12 @@
     "test": "jest"
   },
   "dependencies": {
-    "@roamhq/wrtc": "^0.8.0",
     "@sinclair/typebox": "^0.32.20",
     "headers-polyfill": "^3.1.2",
     "json-stable-stringify": "^1.0.2",
     "otpauth": "^9.2.2",
     "set-cookie-parser": "^2.6.0",
-    "tough-cookie": "^4.1.2",
-    "twitter-api-v2": "^1.18.2",
-    "undici": "^7.1.1",
-    "undici-types": "^7.2.0",
-    "ws": "^8.18.0"
+    "tough-cookie": "^4.1.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.6.3",
