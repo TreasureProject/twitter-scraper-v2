@@ -26,7 +26,6 @@ import {
 	searchProfiles,
 	searchTweets,
 } from "./search";
-import { fetchHomeTimeline } from "./timeline-home";
 import type { QueryProfilesResponse, QueryTweetsResponse } from "./timeline-v1";
 import { getTrends } from "./trends";
 import {
@@ -44,8 +43,6 @@ import {
 	getTweetsAndRepliesByUserId,
 	getTweetsByUserId,
 	getTweetsWhere,
-	likeTweet,
-	retweet,
 } from "./tweets";
 
 const twUrl = "https://twitter.com";
@@ -89,6 +86,34 @@ export class Scraper {
 	}
 
 	/**
+	 * Initializes auth properties using a guest token.
+	 * Used when creating a new instance of this class, and when logging out.
+	 * @internal
+	 */
+	private useGuestAuth() {
+		this.auth = new TwitterGuestAuth(this.token, this.getAuthOptions());
+		this.authTrends = new TwitterGuestAuth(this.token, this.getAuthOptions());
+	}
+
+	/**
+	 * Replaces auth properties using a user token.
+	 * Used when the methods involve user auth.
+	 * @internal
+	 */
+	private useUserAuth() {
+		if (this.auth instanceof TwitterUserAuth) {
+			// Returns existing TwitterUserAuth.
+			return this.auth;
+		}
+
+		// Else instantiates a new one to use.
+		const userAuth = new TwitterUserAuth(this.token, this.getAuthOptions());
+		this.auth = userAuth;
+		this.authTrends = userAuth;
+		return userAuth;
+	}
+
+	/**
 	 * Registers a subtask handler for the given subtask ID. This
 	 * will override any existing handler for the same subtask.
 	 * @param subtaskId The ID of the subtask to register the handler for.
@@ -98,23 +123,8 @@ export class Scraper {
 		subtaskId: string,
 		subtaskHandler: FlowSubtaskHandler,
 	): void {
-		if (this.auth instanceof TwitterUserAuth) {
-			this.auth.registerSubtaskHandler(subtaskId, subtaskHandler);
-		}
-
-		if (this.authTrends instanceof TwitterUserAuth) {
-			this.authTrends.registerSubtaskHandler(subtaskId, subtaskHandler);
-		}
-	}
-
-	/**
-	 * Initializes auth properties using a guest token.
-	 * Used when creating a new instance of this class, and when logging out.
-	 * @internal
-	 */
-	private useGuestAuth() {
-		this.auth = new TwitterGuestAuth(this.token, this.getAuthOptions());
-		this.authTrends = new TwitterGuestAuth(this.token, this.getAuthOptions());
+		const userAuth = this.useUserAuth();
+		userAuth.registerSubtaskHandler(subtaskId, subtaskHandler);
 	}
 
 	/**
@@ -443,10 +453,8 @@ export class Scraper {
 		twoFactorSecret?: string,
 	): Promise<void> {
 		// Swap in a real authorizer for all requests
-		const userAuth = new TwitterUserAuth(this.token, this.getAuthOptions());
+		const userAuth = this.useUserAuth();
 		await userAuth.login(username, password, email, twoFactorSecret);
-		this.auth = userAuth;
-		this.authTrends = userAuth;
 	}
 
 	/**
@@ -477,13 +485,10 @@ export class Scraper {
 	 * @param cookies The cookies to set for the current session.
 	 */
 	public async setCookies(cookies: (string | Cookie)[]): Promise<void> {
-		const userAuth = new TwitterUserAuth(this.token, this.getAuthOptions());
+		const userAuth = this.useUserAuth();
 		for (const cookie of cookies) {
 			await userAuth.cookieJar().setCookie(cookie, twUrl);
 		}
-
-		this.auth = userAuth;
-		this.authTrends = userAuth;
 	}
 
 	/**
@@ -520,33 +525,6 @@ export class Scraper {
 			"Warning: Scraper#withXCsrfToken is deprecated and will be removed in a later version.",
 		);
 		return this;
-	}
-
-	public async fetchHomeTimeline(
-		count: number,
-		seenTweetIds: string[],
-	): Promise<any[]> {
-		return await fetchHomeTimeline(count, seenTweetIds, this.auth);
-	}
-
-	/**
-	 * Likes a tweet with the given tweet ID.
-	 * @param tweetId The ID of the tweet to like.
-	 * @returns A promise that resolves when the tweet is liked.
-	 */
-	public async likeTweet(tweetId: string): Promise<void> {
-		// Call the likeTweet function from tweets.ts
-		await likeTweet(tweetId, this.auth);
-	}
-
-	/**
-	 * Retweets a tweet with the given tweet ID.
-	 * @param tweetId The ID of the tweet to retweet.
-	 * @returns A promise that resolves when the tweet is retweeted.
-	 */
-	public async retweet(tweetId: string): Promise<void> {
-		// Call the retweet function from tweets.ts
-		await retweet(tweetId, this.auth);
 	}
 
 	/**
