@@ -26,6 +26,7 @@ import {
 	searchProfiles,
 	searchTweets,
 } from "./search";
+import { fetchHomeTimeline } from "./timeline-home";
 import type { QueryProfilesResponse, QueryTweetsResponse } from "./timeline-v1";
 import { getTrends } from "./trends";
 import {
@@ -43,6 +44,8 @@ import {
 	getTweetsAndRepliesByUserId,
 	getTweetsByUserId,
 	getTweetsWhere,
+	likeTweet,
+	retweet,
 } from "./tweets";
 
 const twUrl = "https://twitter.com";
@@ -517,6 +520,33 @@ export class Scraper {
 			"Warning: Scraper#withXCsrfToken is deprecated and will be removed in a later version.",
 		);
 		return this;
+	}
+
+	public async fetchHomeTimeline(
+		count: number,
+		seenTweetIds: string[],
+	): Promise<any[]> {
+		return await fetchHomeTimeline(count, seenTweetIds, this.auth);
+	}
+
+	/**
+	 * Likes a tweet with the given tweet ID.
+	 * @param tweetId The ID of the tweet to like.
+	 * @returns A promise that resolves when the tweet is liked.
+	 */
+	public async likeTweet(tweetId: string): Promise<void> {
+		// Call the likeTweet function from tweets.ts
+		await likeTweet(tweetId, this.auth);
+	}
+
+	/**
+	 * Retweets a tweet with the given tweet ID.
+	 * @param tweetId The ID of the tweet to retweet.
+	 * @returns A promise that resolves when the tweet is retweeted.
+	 */
+	public async retweet(tweetId: string): Promise<void> {
+		// Call the retweet function from tweets.ts
+		await retweet(tweetId, this.auth);
 	}
 
 	/**

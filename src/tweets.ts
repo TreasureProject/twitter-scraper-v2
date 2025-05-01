@@ -277,6 +277,107 @@ export async function createQuoteTweetRequest(
 	return response;
 }
 
+/**
+ * Likes a tweet with the given tweet ID.
+ * @param tweetId The ID of the tweet to like.
+ * @param auth The authentication object.
+ * @returns A promise that resolves when the tweet is liked.
+ */
+export async function likeTweet(
+	tweetId: string,
+	auth: TwitterAuth,
+): Promise<void> {
+	// Prepare the GraphQL endpoint and payload
+	const likeTweetUrl =
+		"https://twitter.com/i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet";
+
+	// Retrieve necessary cookies and tokens
+	const cookies = await auth.cookieJar().getCookies(likeTweetUrl);
+	const xCsrfToken = cookies.find((cookie) => cookie.key === "ct0");
+
+	const headers = new Headers({
+		authorization: `Bearer ${(auth as any).bearerToken}`,
+		cookie: await auth.cookieJar().getCookieString(likeTweetUrl),
+		"content-type": "application/json",
+		"x-guest-token": (auth as any).guestToken,
+		"x-twitter-auth-type": "OAuth2Client",
+		"x-twitter-active-user": "yes",
+		"x-csrf-token": xCsrfToken?.value as string,
+	});
+
+	const payload = {
+		variables: {
+			tweet_id: tweetId,
+		},
+	};
+
+	// Send the POST request to like the tweet
+	const response = await fetch(likeTweetUrl, {
+		method: "POST",
+		headers,
+		body: JSON.stringify(payload),
+	});
+
+	// Update the cookie jar with any new cookies from the response
+	await updateCookieJar(auth.cookieJar(), response.headers);
+
+	// Check for errors in the response
+	if (!response.ok) {
+		throw new Error(await response.text());
+	}
+}
+
+/**
+ * Retweets a tweet with the given tweet ID.
+ * @param tweetId The ID of the tweet to retweet.
+ * @param auth The authentication object.
+ * @returns A promise that resolves when the tweet is retweeted.
+ */
+export async function retweet(
+	tweetId: string,
+	auth: TwitterAuth,
+): Promise<void> {
+	// Prepare the GraphQL endpoint and payload
+	const retweetUrl =
+		"https://twitter.com/i/api/graphql/ojPdsZsimiJrUGLR1sjUtA/CreateRetweet";
+
+	// Retrieve necessary cookies and tokens
+	const cookies = await auth.cookieJar().getCookies(retweetUrl);
+	const xCsrfToken = cookies.find((cookie) => cookie.key === "ct0");
+
+	const headers = new Headers({
+		authorization: `Bearer ${(auth as any).bearerToken}`,
+		cookie: await auth.cookieJar().getCookieString(retweetUrl),
+		"content-type": "application/json",
+		"x-guest-token": (auth as any).guestToken,
+		"x-twitter-auth-type": "OAuth2Client",
+		"x-twitter-active-user": "yes",
+		"x-csrf-token": xCsrfToken?.value as string,
+	});
+
+	const payload = {
+		variables: {
+			tweet_id: tweetId,
+			dark_request: false,
+		},
+	};
+
+	// Send the POST request to retweet the tweet
+	const response = await fetch(retweetUrl, {
+		method: "POST",
+		headers,
+		body: JSON.stringify(payload),
+	});
+
+	// Update the cookie jar with any new cookies from the response
+	await updateCookieJar(auth.cookieJar(), response.headers);
+
+	// Check for errors in the response
+	if (!response.ok) {
+		throw new Error(await response.text());
+	}
+}
+
 interface MediaUploadResponse {
 	media_id_string: string;
 	size: number;
