@@ -335,3 +335,29 @@ test("scraper can get liked tweets", async () => {
 	expect(tweet.done).toBeFalsy();
 	expect(tweet.value?.id).not.toBeUndefined();
 });
+
+test("sendTweet successfully sends a tweet", async () => {
+	const scraper = await getScraper();
+	const draftText = "Core updated on " + Date.now().toString();
+
+	const result = await scraper.sendTweet(draftText);
+	console.log("Send tweet result:", result);
+
+	const replyResult = await scraper.sendTweet(
+		"Ignore this",
+		"1430277451452751874",
+	);
+	console.log("Send reply result:", replyResult);
+});
+
+test("scraper can send a tweet without media", async () => {
+	const scraper = await getScraper();
+	const draftText = "Test tweet without media " + Date.now().toString();
+
+	// Send a tweet without any media attachments
+	const result = await scraper.sendTweet(draftText);
+
+	// Log and verify the result
+	console.log("Send tweet without media result:", result);
+	expect(result.ok).toBeTruthy();
+}, 30000);

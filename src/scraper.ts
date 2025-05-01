@@ -31,6 +31,7 @@ import { getTrends } from "./trends";
 import {
 	type Tweet,
 	type TweetQuery,
+	createCreateTweetRequest,
 	fetchListTweets,
 	getLatestTweet,
 	getLikedTweets,
@@ -516,6 +517,29 @@ export class Scraper {
 			"Warning: Scraper#withXCsrfToken is deprecated and will be removed in a later version.",
 		);
 		return this;
+	}
+
+	/**
+	 * Send a tweet
+	 * @param text The text of the tweet
+	 * @param tweetId The id of the tweet to reply to
+	 * @param mediaData Optional media data
+	 * @returns
+	 */
+
+	async sendTweet(
+		text: string,
+		replyToTweetId?: string,
+		mediaData?: { data: Buffer; mediaType: string }[],
+		hideLinkPreview?: boolean,
+	) {
+		return await createCreateTweetRequest(
+			text,
+			this.auth,
+			replyToTweetId,
+			mediaData,
+			hideLinkPreview,
+		);
 	}
 
 	private getAuthOptions(): Partial<TwitterAuthOptions> {
